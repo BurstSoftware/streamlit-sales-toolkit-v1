@@ -8,6 +8,12 @@ st.write("Welcome to the Streamlit Sales Toolkit! This application guides you th
 st.sidebar.title("Navigation")
 section = st.sidebar.radio("Go to", ["Home", "Client Discovery", "ROI Calculator", "Sales Pitch Summary"])
 
+# Initialize variables with default values to prevent errors
+data_analysis = "Manual"  # Default value for data analysis method
+reporting_hours = 0       # Default value for reporting hours
+inventory_cost = 0        # Default value for inventory cost
+revenue = 0               # Default value for revenue
+
 # Home Section
 if section == "Home":
     st.header("Why Streamlit Applications?")
@@ -28,7 +34,7 @@ elif section == "Client Discovery":
     st.header("Client Discovery")
     st.write("Answer the following questions to assess the client's needs:")
 
-    # Capture client needs
+    # Capture client needs and assign values to variables
     data_analysis = st.selectbox("How does your client handle data analysis?", ["Manual", "Automated", "Mixed"])
     reporting_hours = st.number_input("Estimate hours spent on manual reporting monthly:", min_value=0, max_value=1000)
     inventory_cost = st.number_input("Annual inventory cost (if applicable):", min_value=0)
@@ -45,18 +51,22 @@ elif section == "Client Discovery":
 elif section == "ROI Calculator":
     st.header("ROI Calculator")
 
-    # Calculate estimated ROI based on responses
+    # Calculate ROI based on client responses if values are provided
     if revenue > 0:
         roi = revenue * 0.03  # Assuming a 3% improvement in decision-making
-        st.write(f"**Enhanced Decision-Making ROI:** ${roi}")
+        st.write(f"**Enhanced Decision-Making ROI:** ${roi:,.2f}")
 
     if reporting_hours > 0:
         reporting_savings = reporting_hours * 75 * 12 * 0.8  # Estimating an 80% time-saving with automation
-        st.write(f"**Automated Reporting ROI:** ${reporting_savings}")
+        st.write(f"**Automated Reporting ROI:** ${reporting_savings:,.2f}")
 
     if inventory_cost > 0:
         inventory_savings = inventory_cost * 0.1  # Estimating a 10% cost reduction in inventory
-        st.write(f"**Inventory Management ROI:** ${inventory_savings}")
+        st.write(f"**Inventory Management ROI:** ${inventory_savings:,.2f}")
+
+    # Message if no input has been provided
+    if revenue == 0 and reporting_hours == 0 and inventory_cost == 0:
+        st.write("Please fill in the Client Discovery section to see ROI calculations.")
 
 # Sales Pitch Summary Section
 elif section == "Sales Pitch Summary":
