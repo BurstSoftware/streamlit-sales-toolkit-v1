@@ -8,11 +8,15 @@ st.write("Welcome to the Streamlit Sales Toolkit! This application guides you th
 st.sidebar.title("Navigation")
 section = st.sidebar.radio("Go to", ["Home", "Client Discovery", "ROI Calculator", "Sales Pitch Summary"])
 
-# Initialize variables with default values to prevent errors
-data_analysis = "Manual"  # Default value for data analysis method
-reporting_hours = 0       # Default value for reporting hours
-inventory_cost = 0        # Default value for inventory cost
-revenue = 0               # Default value for revenue
+# Initialize session state for each input if it doesn't already exist
+if "data_analysis" not in st.session_state:
+    st.session_state["data_analysis"] = "Manual"
+if "reporting_hours" not in st.session_state:
+    st.session_state["reporting_hours"] = 0
+if "inventory_cost" not in st.session_state:
+    st.session_state["inventory_cost"] = 0
+if "revenue" not in st.session_state:
+    st.session_state["revenue"] = 0
 
 # Home Section
 if section == "Home":
@@ -34,24 +38,29 @@ elif section == "Client Discovery":
     st.header("Client Discovery")
     st.write("Answer the following questions to assess the client's needs:")
 
-    # Capture client needs and assign values to variables
-    data_analysis = st.selectbox("How does your client handle data analysis?", ["Manual", "Automated", "Mixed"])
-    reporting_hours = st.number_input("Estimate hours spent on manual reporting monthly:", min_value=0, max_value=1000)
-    inventory_cost = st.number_input("Annual inventory cost (if applicable):", min_value=0)
-    revenue = st.number_input("Client’s annual revenue:", min_value=0)
+    # Input fields that save directly to session state
+    st.session_state["data_analysis"] = st.selectbox("How does your client handle data analysis?", ["Manual", "Automated", "Mixed"], index=["Manual", "Automated", "Mixed"].index(st.session_state["data_analysis"]))
+    st.session_state["reporting_hours"] = st.number_input("Estimate hours spent on manual reporting monthly:", min_value=0, max_value=1000, value=st.session_state["reporting_hours"])
+    st.session_state["inventory_cost"] = st.number_input("Annual inventory cost (if applicable):", min_value=0, value=st.session_state["inventory_cost"])
+    st.session_state["revenue"] = st.number_input("Client’s annual revenue:", min_value=0, value=st.session_state["revenue"])
 
-    # Display responses
-    st.write("Client Discovery Summary:")
-    st.write(f"Data Analysis Method: {data_analysis}")
-    st.write(f"Reporting Hours: {reporting_hours} hours")
-    st.write(f"Inventory Cost: ${inventory_cost}")
-    st.write(f"Revenue: ${revenue}")
+    # Display summary of input values
+    st.write("**Client Discovery Summary:**")
+    st.write(f"- Data Analysis Method: {st.session_state['data_analysis']}")
+    st.write(f"- Reporting Hours: {st.session_state['reporting_hours']} hours")
+    st.write(f"- Inventory Cost: ${st.session_state['inventory_cost']}")
+    st.write(f"- Revenue: ${st.session_state['revenue']}")
 
 # ROI Calculator Section
 elif section == "ROI Calculator":
     st.header("ROI Calculator")
+    
+    # Editable fields to calculate ROI, directly accessing session state values
+    revenue = st.number_input("Client's Annual Revenue:", min_value=0, value=st.session_state["revenue"], key="roi_revenue")
+    reporting_hours = st.number_input("Hours Spent on Reporting Monthly:", min_value=0, max_value=1000, value=st.session_state["reporting_hours"], key="roi_reporting_hours")
+    inventory_cost = st.number_input("Annual Inventory Cost:", min_value=0, value=st.session_state["inventory_cost"], key="roi_inventory_cost")
 
-    # Calculate ROI based on client responses if values are provided
+    # Calculate ROI based on user inputs
     if revenue > 0:
         roi = revenue * 0.03  # Assuming a 3% improvement in decision-making
         st.write(f"**Enhanced Decision-Making ROI:** ${roi:,.2f}")
@@ -63,10 +72,6 @@ elif section == "ROI Calculator":
     if inventory_cost > 0:
         inventory_savings = inventory_cost * 0.1  # Estimating a 10% cost reduction in inventory
         st.write(f"**Inventory Management ROI:** ${inventory_savings:,.2f}")
-
-    # Message if no input has been provided
-    if revenue == 0 and reporting_hours == 0 and inventory_cost == 0:
-        st.write("Please fill in the Client Discovery section to see ROI calculations.")
 
 # Sales Pitch Summary Section
 elif section == "Sales Pitch Summary":
