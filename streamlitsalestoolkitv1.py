@@ -42,41 +42,125 @@ elif section == "Client Discovery":
     st.session_state["data_analysis"] = st.selectbox("How does your client handle data analysis?", ["Manual", "Automated", "Mixed"], index=["Manual", "Automated", "Mixed"].index(st.session_state["data_analysis"]))
     st.session_state["reporting_hours"] = st.number_input("Estimate hours spent on manual reporting monthly:", min_value=0, max_value=1000, value=st.session_state["reporting_hours"])
     st.session_state["inventory_cost"] = st.number_input("Annual inventory cost (if applicable):", min_value=0, value=st.session_state["inventory_cost"])
-    st.session_state["revenue"] = st.number_input("Client’s annual revenue:", min_value=0, value=st.session_state["revenue"])
+    st.session_state["revenue"] = st.number_input("Client's annual revenue:", min_value=0, value=st.session_state["revenue"])
 
     # Display summary of input values
     st.write("**Client Discovery Summary:**")
     st.write(f"- Data Analysis Method: {st.session_state['data_analysis']}")
     st.write(f"- Reporting Hours: {st.session_state['reporting_hours']} hours")
-    st.write(f"- Inventory Cost: ${st.session_state['inventory_cost']}")
-    st.write(f"- Revenue: ${st.session_state['revenue']}")
+    st.write(f"- Inventory Cost: ${st.session_state['inventory_cost']:,.2f}")
+    st.write(f"- Revenue: ${st.session_state['revenue']:,.2f}")
 
 # ROI Calculator Section
 elif section == "ROI Calculator":
     st.header("ROI Calculator")
+    st.write("Based on your client discovery data, here's the projected ROI breakdown:")
+
+    # Constants for calculations
+    HOURLY_RATE = 75  # Average hourly rate for employees
+    AUTOMATION_EFFICIENCY = 0.8  # 80% time savings with automation
+    INVENTORY_OPTIMIZATION = 0.1  # 10% inventory cost reduction
+    DECISION_MAKING_IMPROVEMENT = 0.03  # 3% revenue improvement
+    ERROR_REDUCTION = 0.02  # 2% error reduction in manual processes
     
-    # Editable fields to calculate ROI, directly accessing session state values
-    revenue = st.number_input("Client's Annual Revenue:", min_value=0, value=st.session_state["revenue"], key="roi_revenue")
-    reporting_hours = st.number_input("Hours Spent on Reporting Monthly:", min_value=0, max_value=1000, value=st.session_state["reporting_hours"], key="roi_reporting_hours")
-    inventory_cost = st.number_input("Annual Inventory Cost:", min_value=0, value=st.session_state["inventory_cost"], key="roi_inventory_cost")
+    # Create columns for better layout
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Input Values")
+        # Display current values and allow for adjustments
+        revenue = st.number_input("Annual Revenue ($):", 
+                                min_value=0, 
+                                value=st.session_state["revenue"],
+                                format="%d")
+        
+        reporting_hours = st.number_input("Monthly Reporting Hours:",
+                                        min_value=0,
+                                        max_value=1000,
+                                        value=st.session_state["reporting_hours"])
+        
+        inventory_cost = st.number_input("Annual Inventory Cost ($):",
+                                       min_value=0,
+                                       value=st.session_state["inventory_cost"],
+                                       format="%d")
+        
+        data_analysis_method = st.selectbox("Current Data Analysis Method:",
+                                          ["Manual", "Automated", "Mixed"],
+                                          index=["Manual", "Automated", "Mixed"].index(st.session_state["data_analysis"]))
 
-    # Calculate ROI based on user inputs
-    if revenue > 0:
-        roi = revenue * 0.03  # Assuming a 3% improvement in decision-making
-        st.write(f"**Enhanced Decision-Making ROI:** ${roi:,.2f}")
+    with col2:
+        st.subheader("Savings Breakdown")
+        
+        # 1. Time Savings from Automated Reporting
+        annual_reporting_cost = reporting_hours * HOURLY_RATE * 12
+        reporting_savings = annual_reporting_cost * AUTOMATION_EFFICIENCY
+        st.write("**1. Reporting Automation Savings**")
+        st.write(f"- Annual Hours Saved: {reporting_hours * 12 * AUTOMATION_EFFICIENCY:,.0f} hours")
+        st.write(f"- Cost Savings: ${reporting_savings:,.2f}")
+        
+        # 2. Inventory Optimization (if applicable)
+        if inventory_cost > 0:
+            inventory_savings = inventory_cost * INVENTORY_OPTIMIZATION
+            st.write("**2. Inventory Optimization Savings**")
+            st.write(f"- Cost Reduction: ${inventory_savings:,.2f}")
+        else:
+            inventory_savings = 0
+        
+        # 3. Enhanced Decision Making Impact
+        decision_making_benefit = revenue * DECISION_MAKING_IMPROVEMENT
+        st.write("**3. Enhanced Decision Making Impact**")
+        st.write(f"- Revenue Improvement: ${decision_making_benefit:,.2f}")
+        
+        # 4. Error Reduction Savings (based on revenue)
+        error_reduction_savings = revenue * ERROR_REDUCTION
+        st.write("**4. Error Reduction Savings**")
+        st.write(f"- Cost Avoidance: ${error_reduction_savings:,.2f}")
 
-    if reporting_hours > 0:
-        reporting_savings = reporting_hours * 75 * 12 * 0.8  # Estimating an 80% time-saving with automation
-        st.write(f"**Automated Reporting ROI:** ${reporting_savings:,.2f}")
-
-    if inventory_cost > 0:
-        inventory_savings = inventory_cost * 0.1  # Estimating a 10% cost reduction in inventory
-        st.write(f"**Inventory Management ROI:** ${inventory_savings:,.2f}")
+    # Total ROI Calculation
+    st.markdown("---")
+    st.subheader("Total ROI Summary")
+    
+    # Calculate implementation costs (example values)
+    implementation_cost = 50000  # Base implementation cost
+    annual_subscription = 12000  # Annual subscription cost
+    first_year_cost = implementation_cost + annual_subscription
+    
+    # Calculate total benefits
+    total_annual_benefits = (
+        reporting_savings +
+        inventory_savings +
+        decision_making_benefit +
+        error_reduction_savings
+    )
+    
+    # ROI Metrics
+    roi_percentage = ((total_annual_benefits - first_year_cost) / first_year_cost) * 100
+    payback_months = (first_year_cost / total_annual_benefits) * 12
+    
+    # Display ROI metrics in columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Total Annual Benefits", f"${total_annual_benefits:,.2f}")
+    with col2:
+        st.metric("First Year ROI", f"{roi_percentage:.1f}%")
+    with col3:
+        st.metric("Payback Period", f"{payback_months:.1f} months")
+    
+    # Additional ROI Details
+    st.markdown("---")
+    st.subheader("Implementation Details")
+    st.write(f"""
+    - One-time Implementation Cost: ${implementation_cost:,.2f}
+    - Annual Subscription Cost: ${annual_subscription:,.2f}
+    - First Year Total Cost: ${first_year_cost:,.2f}
+    - Net First Year Benefit: ${(total_annual_benefits - first_year_cost):,.2f}
+    """)
 
 # Sales Pitch Summary Section
 elif section == "Sales Pitch Summary":
     st.header("Sales Pitch Summary")
-    st.write("Here’s a tailored pitch based on your client’s needs:")
+    st.write("Here's a tailored pitch based on your client's needs:")
 
     st.write("""
     - **Enhanced Decision-Making**: By using Streamlit apps to visualize and simulate data, your decision-makers gain real-time insights, helping increase efficiency and avoid costly mistakes.
