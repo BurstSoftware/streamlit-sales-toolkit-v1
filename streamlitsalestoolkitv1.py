@@ -133,9 +133,13 @@ elif section == "ROI Calculator":
         error_reduction_savings
     )
     
-    # ROI Metrics
-    roi_percentage = ((total_annual_benefits - first_year_cost) / first_year_cost) * 100
-    payback_months = (first_year_cost / total_annual_benefits) * 12
+    # ROI Metrics with error handling
+    if total_annual_benefits > 0:
+        roi_percentage = ((total_annual_benefits - first_year_cost) / first_year_cost) * 100
+        payback_months = (first_year_cost / total_annual_benefits) * 12
+    else:
+        roi_percentage = 0
+        payback_months = float('inf')  # Represents infinite payback period
     
     # Display ROI metrics in columns
     col1, col2, col3 = st.columns(3)
@@ -145,17 +149,25 @@ elif section == "ROI Calculator":
     with col2:
         st.metric("First Year ROI", f"{roi_percentage:.1f}%")
     with col3:
-        st.metric("Payback Period", f"{payback_months:.1f} months")
+        if payback_months == float('inf'):
+            st.metric("Payback Period", "N/A")
+        else:
+            st.metric("Payback Period", f"{payback_months:.1f} months")
     
     # Additional ROI Details
     st.markdown("---")
     st.subheader("Implementation Details")
-    st.write(f"""
-    - One-time Implementation Cost: ${implementation_cost:,.2f}
-    - Annual Subscription Cost: ${annual_subscription:,.2f}
-    - First Year Total Cost: ${first_year_cost:,.2f}
-    - Net First Year Benefit: ${(total_annual_benefits - first_year_cost):,.2f}
-    """)
+    
+    # Show implementation details with appropriate messaging
+    if total_annual_benefits > 0:
+        st.write(f"""
+        - One-time Implementation Cost: ${implementation_cost:,.2f}
+        - Annual Subscription Cost: ${annual_subscription:,.2f}
+        - First Year Total Cost: ${first_year_cost:,.2f}
+        - Net First Year Benefit: ${(total_annual_benefits - first_year_cost):,.2f}
+        """)
+    else:
+        st.warning("Please enter values in the Client Discovery section or above to calculate ROI metrics.")
 
 # Sales Pitch Summary Section
 elif section == "Sales Pitch Summary":
