@@ -4,6 +4,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import hashlib  # For password hashing (if needed for user accounts)
 import uuid  # For generating unique IDs for submissions
+import os  # For handling environment variables
 
 # Simulated database interaction
 def save_to_database(data):
@@ -14,7 +15,7 @@ def save_to_database(data):
 
 # Email validation function
 def is_valid_email(email):
-    email_regex = r'^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
 
 # Function to interact with CRM (simulated)
@@ -25,12 +26,12 @@ def update_crm(data):
 
 def send_email(to_email, subject, body):
     message = Mail(
-        from_email='your_email@example.com',
+        from_email=os.getenv('FROM_EMAIL', 'your_email@example.com'),
         to_emails=to_email,
         subject=subject,
         html_content=body)
     try:
-        sg = SendGridAPIClient('YOUR_SENDGRID_API_KEY')
+        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY', 'YOUR_SENDGRID_API_KEY'))
         response = sg.send(message)
         st.success('Email sent')
         return True
@@ -38,13 +39,17 @@ def send_email(to_email, subject, body):
         st.error(f'Error sending email: {e}')
         return False
 
-# Security: Basic CSRF protection
+# Security: Improved CSRF protection
 def check_csrf_token():
-    # In a real app, you'd need to handle CSRF tokens more securely
-    # This is a very basic check
     if 'csrf_token' not in st.session_state:
         st.session_state['csrf_token'] = str(uuid.uuid4())
-    return st.experimental_get_query_params().get('csrf_token', [None])[0] == st.session_state['csrf_token']
+        st.experimental_set_query_params(csrf_token=st.session_state['csrf_token'])
+    current_token = st.experimental_get_query_params().get('csrf_token', [None])[0]
+    return current_token == st.session_state['csrf_token']
+
+def sanitize_input(input_string):
+    # Basic sanitization; in a real-world scenario, this would be more comprehensive
+    return re.sub(r'[^\w\s@.-]', '', input_string)
 
 def main():
     st.title("Web Application Request Form")
@@ -60,10 +65,10 @@ def main():
     description = st.text_area("Describe the Web Application You Need", 
                                "Please provide details about the features, purpose, etc.")
 
-    # Security: Sanitizing user inputs (very basic)
-    name = name.strip()
-    business_name = business_name.strip()
-    email = email.strip().lower()
+    # Security: Sanitizing user inputs (improved)
+    name = sanitize_input(name)
+    business_name = sanitize_input(business_name)
+    email = sanitize_input(email).lower()
 
     # Checkbox for additional services
     need_hosting = st.checkbox("Do you need hosting services?")
